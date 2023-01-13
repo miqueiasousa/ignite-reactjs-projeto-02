@@ -48,6 +48,10 @@ export const BaseInput = s.input`
 
 export const TaskInput = s(BaseInput)`
   flex: 1;
+
+  &::-webkit-calendar-picker-indicator {
+    display: none !important;
+  }
 `
 
 export const MinutesAmountInput = s(BaseInput)`
