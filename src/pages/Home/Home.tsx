@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Play } from 'phosphor-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -36,6 +36,7 @@ export function Home() {
   const [cycles, setCycles] = useState<Cycle[]>([])
   const [activeCycleId, setActiveCycleId] = useState<string | null>(null)
   const [amountSecondsPassed, setAmountSecondsPassed] = useState(0)
+  const intervalId = useRef<number | undefined>(undefined)
 
   const { register, handleSubmit, watch, reset } = useForm<NewCycleFormData>({
     resolver: zodResolver(newCycleFormValidationSchema),
@@ -56,6 +57,7 @@ export function Home() {
 
     setCycles(prev => [...prev, newCycle])
     setActiveCycleId(id)
+    setAmountSecondsPassed(0)
 
     reset()
   }
@@ -76,13 +78,23 @@ export function Home() {
 
   useEffect(() => {
     if (activeCycle) {
-      setInterval(() => {
+      intervalId.current = setInterval(() => {
         setAmountSecondsPassed(
           differenceInSeconds(new Date(), activeCycle.startDate)
         )
       }, 1000)
     }
+
+    return () => {
+      clearInterval(intervalId.current)
+    }
   }, [activeCycle])
+
+  useEffect(() => {
+    if (!activeCycle) return
+
+    document.title = `${minutes}:${seconds}`
+  }, [minutes, seconds, activeCycle])
 
   return (
     <HomeContainer>
