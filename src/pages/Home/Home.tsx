@@ -22,6 +22,7 @@ interface Cycle {
   minutesAmount: number
   startDate: Date
   interruptedDate?: Date
+  finishedDate?: Date
 }
 
 const newCycleFormValidationSchema = z.object({
@@ -65,12 +66,12 @@ export function Home() {
   }
 
   function handleInterruptCycle() {
-    setCycles(
-      cycles.map(cycle => {
+    setCycles(state =>
+      state.map(cycle => {
         if (cycle.id === activeCycleId) {
           return {
             ...cycle,
-            interruptedDate: new Date()
+            finishedDate: new Date()
           }
         } else {
           return cycle
@@ -97,16 +98,38 @@ export function Home() {
   useEffect(() => {
     if (activeCycle) {
       intervalId.current = setInterval(() => {
-        setAmountSecondsPassed(
-          differenceInSeconds(new Date(), activeCycle.startDate)
+        const secondsDiff = differenceInSeconds(
+          new Date(),
+          activeCycle.startDate
         )
+
+        if (secondsDiff >= totalSeconds) {
+          setCycles(state =>
+            state.map(cycle => {
+              if (cycle.id === activeCycleId) {
+                return {
+                  ...cycle,
+                  interruptedDate: new Date()
+                }
+              } else {
+                return cycle
+              }
+            })
+          )
+
+          setAmountSecondsPassed(0)
+          setActiveCycleId(null)
+          clearInterval(intervalId.current)
+        } else {
+          setAmountSecondsPassed(secondsDiff)
+        }
       }, 1000)
     }
 
     return () => {
       clearInterval(intervalId.current)
     }
-  }, [activeCycle])
+  }, [activeCycle, activeCycleId])
 
   useEffect(() => {
     if (!activeCycle) return
